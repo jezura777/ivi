@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define BUFF_SIZE 64
+
 char Look = 0;
 
 void GetChar()
@@ -10,7 +12,10 @@ void GetChar()
 	Look = getc(stdin);
 }
 
-
+void SkipWhite()
+{
+	while(IsWhite(Look)) GetChar();
+}
 void Error(char *string)
 {
 	printf("\n\aERROR: %s.\n", string);
@@ -24,7 +29,10 @@ void Abort(char *string)
 
 void Match(char c)
 {
-	if (Look == c) GetChar();
+	if (Look == c) {
+		GetChar();
+		SkipWhite();
+	}
 	else {
 		char string[] = "\'X\' Expected";
 		string[1] = c;
@@ -42,25 +50,70 @@ bool IsDigit(char c)
 	return (c >= '0' && c <= '9');
 }
 
+bool IsAlNum(char c)
+{
+	return (IsAlpha(c) || IsDigit(c));
+}
+
+bool IsWhite(char c)
+{
+	return ((c == ' ') || (c == '\t'));
+}
+
 bool IsAddop(char c)
 {
 	return (c == '+' || c == '-');
 }
 
-char GetName()
+char *GetName()
 {
-	if(!IsAlpha(Look)) Abort("Name Expected");
+	char *Token =  malloc(sizeof(char) * BUFF_SIZE);
 	char buff = Look;
-	GetChar();
-	return buff;
+	int position = 0;
+	int buffsize = BUFF_SIZE;
+	if(!IsAlpha(Look)) Abort("Name Expected");
+	while(IsAlNum(Look)){
+		Token[position] = Look;
+		position++;
+		GetChar();
+		if (position >= buffsize) {
+      			buffsize += BUFF_SIZE;
+      			Token = (char*)realloc(Token, buffsize);
+      			if (!Token) {
+        			Abort("Couldn't reallocate buffer");
+      			}
+    		}
+     	}
+	/*char *Token = malloc(sizeof(char) * BUFF_SIZE);
+	if(!IsAlpha(Look)) Abort("Name Expected");
+	for(int i = 0; (i < BUFF_SIZE || IsAlNum(Look)); i++){
+		Token[i] = Look;
+		GetChar();
+	}*/
+   	return Token;
 }
 
-char GetNum()
+char *GetNum()
 {
-	if(!IsDigit(Look)) Abort("Integer Expected");
+	char *Token =  malloc(sizeof(char) * BUFF_SIZE);
 	char buff = Look;
-	GetChar();
-	return buff;
+	int position = 0;
+	int buffsize = BUFF_SIZE;
+	if(!IsDigit(Look)) Abort("Integer Expected");
+	while(IsDigit(Look)){
+		Token[position] = Look;
+		position++;
+		GetChar();
+		if (position >= buffsize) {
+      			buffsize += BUFF_SIZE;
+      			Token = (char*)realloc(Token, buffsize);
+      			if (!Token) {
+        			Abort("Couldn't reallocate buffer");
+      			}
+    		}
+     	}
+   	return Token;
+
 }
 
 void Emit(char *string)
@@ -79,23 +132,21 @@ void init()
 	GetChar();
 }
 
+
+
 void Expression();
 
 void Ident()
 {
-	char Name = GetName();
+	char *Name = GetName();
 	if (Look == '(')
 	{
 		Match('(');
       		Match(')');
-		char string[] = "call X";
-		string[5] = Name;
-      		EmitLn(string);
+      		printf("\tcall %s\n", Name);
 	} else
 	{
-		char string[] = "mov rax,[X]";
-		string[9] = Name;
-		EmitLn(string);
+		printf("\tmov rax, [%s]\n", Name);
 	}
 }
 
@@ -110,9 +161,8 @@ void Factor()
 	{
 		Ident();
 	}else {
-		char string[] = "mov rax,N";
-		string[8] = GetNum();
-		EmitLn(string);
+		char *num = GetNum();
+		printf("\tmov rax,%s\n", num);
 	}
 }
 
@@ -193,12 +243,10 @@ void Expression()
 
 void Assigment()
 {
-	char Name = GetName();
+	char *Name = GetName();
 	Match('=');
 	Expression();
-	char string[] = "mov [X],rax";
-	string[5] = Name;
-	EmitLn(string);
+	printf("\tmov [%s],rax\n", Name);
 
 }
 
