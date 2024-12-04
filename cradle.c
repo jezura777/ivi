@@ -12,10 +12,7 @@ void GetChar()
 	Look = getc(stdin);
 }
 
-void SkipWhite()
-{
-	while(IsWhite(Look)) GetChar();
-}
+
 void Error(char *string)
 {
 	printf("\n\aERROR: %s.\n", string);
@@ -26,6 +23,8 @@ void Abort(char *string)
 	Error(string);
 	exit(1);
 }
+
+void SkipWhite();
 
 void Match(char c)
 {
@@ -65,6 +64,11 @@ bool IsAddop(char c)
 	return (c == '+' || c == '-');
 }
 
+void SkipWhite()
+{
+	while(IsWhite(Look)) GetChar();
+}
+
 char *GetName()
 {
 	char *Token =  malloc(sizeof(char) * BUFF_SIZE);
@@ -84,6 +88,7 @@ char *GetName()
       			}
     		}
      	}
+	SkipWhite();
 	/*char *Token = malloc(sizeof(char) * BUFF_SIZE);
 	if(!IsAlpha(Look)) Abort("Name Expected");
 	for(int i = 0; (i < BUFF_SIZE || IsAlNum(Look)); i++){
@@ -112,6 +117,7 @@ char *GetNum()
       			}
     		}
      	}
+	SkipWhite();
    	return Token;
 
 }
@@ -130,6 +136,7 @@ void EmitLn(char *string)
 void init()
 {
 	GetChar();
+	SkipWhite();
 }
 
 
